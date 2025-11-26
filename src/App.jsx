@@ -5,57 +5,57 @@ import Spinner from "./assets/components/Spinner";
 import MovieCard from './assets/components/MovieCard';
 import { useDebounce } from 'use-debounce';
 
-const API_BASE_URL = "https://www.omdbapi.com/";
-const API_KEY = import.meta.env.VITE_OMDB_API_KEY;
+const API_BASE_URL = "https://api.tvmaze.com/search/shows";
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('batman');
+  const [searchTerm, setSearchTerm] = useState('breaking bad');
   const [movies, setMovies] = useState([]); // ✅ Store fetched movies
   const [errorMessage, setErrorMessage] = useState('');
   const[isLoading, setIsLoading] =useState (false);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState ('');
-
-
-  useDebounce (fn =() => setDebouncedSearchTerm(searchTerm), ms ="500",      
-  deps = [searchTerm]   )
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
   const fetchMovies = async (query = '') => {
-   setIsLoading(true);
-   setErrorMessage('');
+    if (!query || query.trim() === '') {
+      setMovies([]);
+      return;
+    }
 
+    setIsLoading(true);
+    setErrorMessage('');
 
     try {
-      const endpoint = query
+      const endpoint = `${API_BASE_URL}?q=${encodeURIComponent(query)}`;
+      const response = await fetch(endpoint);
 
-         ?`${API_BASE_URL}?apikey=${API_KEY}&s=${query}`
-         :`${API_BASE_URL}/search/movie?query =${encodeURIComponent(query)}`
-          const response = await fetch(endpoint);
-
-      if (!response.ok) throw new Error('Failed to fetch movies');
+      if (!response.ok) throw new Error('Failed to fetch shows');
 
       const data = await response.json();
       console.log(data);
 
-      if (data.Response === 'True') {
-        setMovies(data.Search); // ✅ Store results in state
+      if (data && data.length > 0) {
+        // Transform TVMaze format to match our MovieCard component
+        const transformedData = data.map(item => ({
+          imdbID: item.show.id.toString(),
+          Title: item.show.name,
+          Year: item.show.premiered ? item.show.premiered.split('-')[0] : 'N/A',
+          Poster: item.show.image?.medium || item.show.image?.original || 'N/A'
+        }));
+        setMovies(transformedData);
         setErrorMessage('');
       } else {
-        setErrorMessage(data.Error || 'No movies found');
-        setMovies([]); // clear previous data
-        return;
+        setErrorMessage('No shows found');
+        setMovies([]);
       }
-
-      setMovies(data.Search || []);
     } catch (error) {
-      console.error(`Error fetching Movies: ${error}`);
-      setErrorMessage('Error fetching movies. Please try again later :)');
+      console.error(`Error fetching shows: ${error}`);
+      setErrorMessage('Error fetching shows. Please try again later :)');
     }
     finally{
       setIsLoading(false);
     }
   };
  useEffect(() => {
-  fetchMovies(searchTerm);
+  fetchMovies(debouncedSearchTerm);
 }, [debouncedSearchTerm]);
 
 
@@ -76,12 +76,9 @@ function App() {
             ):errorMessage ? (
               <p className='text-red-500'>{errorMessage}</p>
             ): (
-             
-             
-              <div className='movies-grid grid grid-cols-[repeat(auto-fit,_minmax(180px,_1fr))] gap-6 justify-items-center mt-8
-'>
-  {movies.map((movie) => (
-    < MovieCard key ={movie.imdbID} movie= {movie}/>
+              <div className='movies-grid grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-6 justify-items-center mt-8'>
+                {movies.map((movie) => (
+                  <MovieCard key={movie.imdbID} movie={movie}/>
       
     
   ))}
