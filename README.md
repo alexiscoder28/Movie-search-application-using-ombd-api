@@ -1,18 +1,23 @@
-# Movie Search App
+# TV Show & Movie Search App
 
-Simple movie search using OMDB API and React.
+Search TV shows and movies using the TVMaze API.
+
+🔗 **Live Demo:** https://movie-search-application-using-ombd.vercel.app/
 
 ## Setup
 
-1. Clone the repo
-2. `npm install`
-3. Create `.env` file with `VITE_OMDB_API_KEY=your_api_key`
-4. `npm run dev`
+1. `npm install`
+2. `npm run dev`
 
-## What it does
+That's it! No API key needed.
 
-- Search movies
-- Shows posters and stuff
-- Debounced search so it doesn't spam the API
+## Features
 
-Built with React + Vite + Tailwind.
+- Real-time search with 500ms debounce
+- TVMaze API integration (no auth required)
+- Responsive grid layout
+- Loading states and error handling
+
+## Tech Stack
+
+React 19 • Vite • Tailwind CSS v4 • TVMaze API
